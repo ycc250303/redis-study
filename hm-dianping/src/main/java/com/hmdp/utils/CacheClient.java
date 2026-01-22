@@ -29,6 +29,13 @@ public class CacheClient {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
+    /**
+     * 写入redis
+     * @param key
+     * @param value
+     * @param time
+     * @param unit
+     */
     public void set(String key, Object value, Long time, TimeUnit unit) {
         stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(value), time, unit);
     }
@@ -45,7 +52,7 @@ public class CacheClient {
     public <R,ID> R queryWithPassThrough(
             String keyPrefix, ID id, Class<R> type, Function<ID, R> dbFallback, Long time, TimeUnit unit){
         String key = keyPrefix + id;
-        // 1.从redis查询商铺缓存
+        // 1.从redis查询缓存
         String json = stringRedisTemplate.opsForValue().get(key);
         // 2.判断是否存在
         if (StrUtil.isNotBlank(json)) {
@@ -75,7 +82,7 @@ public class CacheClient {
     public <R, ID> R queryWithLogicalExpire(
             String keyPrefix, ID id, Class<R> type, Function<ID, R> dbFallback, Long time, TimeUnit unit) {
         String key = keyPrefix + id;
-        // 1.从redis查询商铺缓存
+        // 1.从redis查询缓存
         String json = stringRedisTemplate.opsForValue().get(key);
         // 2.判断是否存在
         if (StrUtil.isBlank(json)) {
@@ -113,7 +120,7 @@ public class CacheClient {
                 }
             });
         }
-        // 6.4.返回过期的商铺信息
+        // 6.4.返回过期的信息
         return r;
     }
 

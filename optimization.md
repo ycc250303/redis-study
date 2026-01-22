@@ -69,6 +69,24 @@
 
 ![1769063898647](image/optimization/1769063898647.png)
 
-### 2.5 缓存
+![1769065424016](image/optimization/1769065424016.png)
 
-### 2.6 缓存
+### 2.5 缓存雪崩
+
+![1769065667057](image/optimization/1769065667057.png)
+
+### 2.6 缓存击穿
+
+![1769065802452](image/optimization/1769065802452.png)
+
+![1769068877964](image/optimization/1769068877964.png)
+
+![1769068901679](image/optimization/1769068901679.png)
+
+#### 2.6.1 互斥锁
+
+![1769069544421](image/optimization/1769069544421.png)
+
+#### 2.6.2 逻辑过期
+
+![1769084858343](image/optimization/1769084858343.png)
