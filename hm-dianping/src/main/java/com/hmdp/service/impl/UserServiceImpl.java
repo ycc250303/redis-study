@@ -15,7 +15,6 @@ import com.hmdp.utils.RegexUtils;
 import com.hmdp.utils.SystemConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -42,9 +41,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
-    @Autowired
-    private RedisTemplate<Object, Object> redisTemplate;
-
 
     @Override
     public Result sendCode(String phone, HttpSession session) {
@@ -68,15 +64,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             return Result.fail("手机号格式错误");
         }
 
-        String cacheCode = redisTemplate.opsForValue().get(LOGIN_CODE_KEY + phone).toString();
+        String cacheCode = stringRedisTemplate.opsForValue().get(LOGIN_CODE_KEY + phone);
         String code = loginForm.getCode();
         if (cacheCode == null || !cacheCode.equals(code)) {
-            return Result.fail("验证码错误");
+            return Result.fail("验证码错误或已过期");
         }
 
         User user = query().eq("phone", loginForm.getPhone()).one();
         if (user == null) {
             createUserWithPhone(phone);
+            // 创建用户后重新查询
+            user = query().eq("phone", loginForm.getPhone()).one();
         }
 
         String token = UUID.randomUUID().toString(true);
@@ -85,8 +83,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         Map<String, Object> stringObjectMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
                 CopyOptions.create()
                         .setIgnoreNullValue(true)
-                        .setFieldValueEditor((filedName, fieldValue)->filedName.toString()));
-
+                        .setFieldValueEditor(
+                                (fieldName, fieldValue) -> fieldValue == null ? null : fieldValue.toString()));
 
         stringRedisTemplate.opsForHash().putAll(tokenKey, stringObjectMap);
         stringRedisTemplate.expire(tokenKey, LOGIN_USER_TTL, TimeUnit.MINUTES);
