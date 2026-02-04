@@ -67,8 +67,32 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Autowired
     private VoucherMapper voucherMapper;
 
+    /**
+     * 检查并创建 stream 与消费者组
+     */
+    private void initStreamAndGroup() {
+        String streamKey = "stream.orders";
+        String groupName = "g1";
+        try {
+            // 尝试创建消费者组，如果 stream 不存在或组已存在都会抛异常
+            stringRedisTemplate.opsForStream().createGroup(streamKey, ReadOffset.from("0"), groupName);
+        } catch (Exception e) {
+            String msg = e.getMessage();
+            // BUSYGROUP 代表组已存在，忽略；其他异常按需记录日志
+            if (msg != null && msg.contains("BUSYGROUP")) {
+                // do nothing
+            } else {
+                // 这里不再继续抛出，避免影响项目启动
+                // 如需排查，可临时打开日志
+                // log.error("初始化 stream 与消费者组失败", e);
+            }
+        }
+    }
+
     @PostConstruct
     private void init() {
+        // 先检查并创建 stream.orders 与 g1 消费者组，避免后续 XREADGROUP 报 NOGROUP
+        initStreamAndGroup();
         SECKILL_ORDER_EXECUTOR.submit(new VoucherOrderHandler());
     }
 
@@ -135,6 +159,11 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                     // XACK stream.orders g1 id
                     stringRedisTemplate.opsForStream().acknowledge(queueName,"g1",record.getId());
                 } catch (Exception e) {
+                    String msg = e.getMessage();
+                    // 如果是 NOGROUP 错误，说明 stream 或消费者组不存在，尝试重新初始化一次
+                    if (msg != null && msg.contains("NOGROUP")) {
+                        initStreamAndGroup();
+                    }
                     log.error("处理pending-list订单异常", e);
                     try{
                         Thread.sleep(20);

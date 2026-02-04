@@ -1,36 +1,15 @@
-package com.hmdp.entity;
+package com.hmdp.dto;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.Accessors;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
-/**
- * <p>
- * 
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
- */
 @Data
-@EqualsAndHashCode(callSuper = false)
-@Accessors(chain = true)
-@TableName("tb_blog")
-public class Blog implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class BlogDTO {
 
     /**
      * 主键
      */
-    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
     /**
      * 商户id
@@ -40,7 +19,18 @@ public class Blog implements Serializable {
      * 用户id
      */
     private Long userId;
-
+    /**
+     * 用户图标
+     */
+    private String icon;
+    /**
+     * 用户姓名
+     */
+    private String name;
+    /**
+     * 是否点赞过了
+     */
+    private Boolean isLike;
 
     /**
      * 标题
@@ -76,6 +66,4 @@ public class Blog implements Serializable {
      * 更新时间
      */
     private LocalDateTime updateTime;
-
-
 }
