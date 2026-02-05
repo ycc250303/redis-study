@@ -47,5 +47,13 @@ public class Follow implements Serializable {
      */
     private LocalDateTime createTime;
 
+    /**
+     * 修改时间
+     */
+    private LocalDateTime updateTime;
 
+    /**
+     * 是否删除
+     */
+    private Boolean deleted;
 }

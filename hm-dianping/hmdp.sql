@@ -86,6 +86,8 @@ CREATE TABLE `tb_follow`  (
   `user_id` bigint(20) UNSIGNED NOT NULL COMMENT '用户id',
   `follow_user_id` bigint(20) UNSIGNED NOT NULL COMMENT '关联的用户id',
   `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` tinyint(1) UNSIGNED NULL DEFAULT 0 COMMENT '逻辑删除，0：未删除，1：已删除',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
 
