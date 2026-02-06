@@ -13,14 +13,18 @@ import com.hmdp.mapper.UserMapper;
 import com.hmdp.service.IUserService;
 import com.hmdp.utils.RegexUtils;
 import com.hmdp.utils.SystemConstants;
+import com.hmdp.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.BitFieldSubCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -89,6 +93,56 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         stringRedisTemplate.opsForHash().putAll(tokenKey, stringObjectMap);
         stringRedisTemplate.expire(tokenKey, LOGIN_USER_TTL, TimeUnit.MINUTES);
         return Result.ok(token);
+    }
+
+    @Override
+    public Result sign() {
+        // 获取当前用户
+        Long userId = UserHolder.getUser().getId();
+        // 获取当前日期
+        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
+        // 拼接key
+        String key = "sign:" + userId + ":" + now;
+        // 获取今天是当月的第几天
+        int offset = LocalDateTime.now().getDayOfMonth();
+        // 写入Redis
+        stringRedisTemplate.opsForValue().setBit(key, offset - 1, true);
+        return Result.ok();
+    }
+
+    @Override
+    public Result signCount() {
+        // 获取当前用户
+        Long userId = UserHolder.getUser().getId();
+        // 获取当前日期
+        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
+        // 拼接key
+        String key = "sign:" + userId + ":" + now;
+        // 获取今天是当月的第几天
+        int offset = LocalDateTime.now().getDayOfMonth();
+        // 获取这个月到今天为止的所有的签到记录
+        List<Long> result = stringRedisTemplate.opsForValue().bitField(
+                key,
+                BitFieldSubCommands.create()
+                        .get(BitFieldSubCommands.BitFieldType.unsigned(offset)).valueAt(0)
+        );
+        if (result == null || result.isEmpty()) {
+            return Result.ok(0);
+        }
+        Long num = result.get(0);
+        if (num == null || num == 0L) {
+            return Result.ok(0);
+        }
+        // 循环遍历
+        int count = 0;
+        // 未签到，结束
+        // 签到，计数器加一
+        while ((num & 1) != 0) {
+            // 数字与 1 做与运算，得到数字最后一个 bit 位
+            count++;
+            num >>>= 1;
+        }
+        return Result.ok(count);
     }
 
     private void createUserWithPhone(String phone) {
