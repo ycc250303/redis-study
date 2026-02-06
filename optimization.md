@@ -366,5 +366,7 @@ BITPOS uid:sign:100:202206 1
 
 ![1770349198337](image/optimization/1770349198337.png)
 
-
 ## UV 统计
+
+* UV：Unique Visitor，独立访客量，记录访问网页的自然人，一个用户一天内多次访问只记录一次
+* PV：Page View，页面访问量，用户每访问一次就记录一次
